@@ -2,12 +2,14 @@ import os
 import time
 import random
 import pytest
-from datetime import datetime, timedelta  # tambahkan ini
+from datetime import datetime, timedelta  
 from dotenv import load_dotenv
 from core.api_client import ApiClient
 from core.context import TestContext
 from core.ai_adapter import generate_payload
 from core.validators import assert_success
+from playwright.sync_api import Page, Browser
+from core.db_client import DatabaseClient
 
 load_dotenv()
 
@@ -121,3 +123,24 @@ def public_client():
 @pytest.fixture
 def ctx(context):
     return context
+
+@pytest.fixture(scope="session")
+def browser_context(browser):
+    """Browser context untuk Playwright."""
+    context = browser.new_context(viewport={"width": 1280, "height": 720})
+    yield context
+    context.close()
+
+
+
+@pytest.fixture
+def page(browser_context):
+    """Halaman Playwright untuk E2E test."""
+    page = browser_context.new_page()
+    yield page
+    page.close()
+
+@pytest.fixture(scope="session")
+def db():
+    """Fixture untuk akses database."""
+    return DatabaseClient()
